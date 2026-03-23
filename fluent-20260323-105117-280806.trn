@@ -1,0 +1,117 @@
+Auto-Transcript Start Time:  10:51:17, 23 Mar 2026 
+Current Directory: "/home/aoki/Downloads/cfd_wall_function_tst"
+/home/opt/ansys/v252/fluent/fluent25.2.0/bin/fluent -r25.2.0 2ddp -pdefault -host -t1 -mpi=intel -path/home/opt/ansys/v252/fluent -ssh -cx localhost:39143:37141
+Warning:  DISPLAY environment variable is not set.
+  Graphics and GUI will not operate correctly
+  without this being set properly.
+Starting /home/opt/ansys/v252/fluent/fluent25.2.0/lnamd64/2ddp_host/fluent.25.2.0 host -cx localhost:39143:37141 "(list (rpsetvar (QUOTE parallel/function) "fluent 2ddp -flux -node -r25.2.0 -t1 -pdefault -mpi=intel -ssh") (rpsetvar (QUOTE parallel/rhost) "") (rpsetvar (QUOTE parallel/ruser) "") (rpsetvar (QUOTE parallel/nprocs_string) "1") (rpsetvar (QUOTE parallel/auto-spawn?) #t) (rpsetvar (QUOTE parallel/trace-level) 0) (rpsetvar (QUOTE parallel/remote-shell) 1) (rpsetvar (QUOTE parallel/path) "/home/opt/ansys/v252/fluent") (rpsetvar (QUOTE parallel/hostsfile) "") (rpsetvar (QUOTE gpuapp/devices) ""))"
+
+              Welcome to ANSYS Fluent 25.2.0
+
+              Copyright 1987-2025 ANSYS, Inc. All Rights Reserved.
+              Unauthorized use, distribution or duplication is prohibited.
+              This product is subject to U.S. laws governing export and re-export.
+              For full Legal Notice, see documentation.
+
+Build Time: Jun 16 2025 09:42:17 EDT  Build Id: 10204  
+ 
+Connected License Server List:	1055@localhost
+
+*********************************************
+Info: Your license enables 4-way parallel execution.
+For faster simulations, please start the application with the appropriate parallel options.
+*********************************************
+
+
+     --------------------------------------------------------------
+     This is an academic version of ANSYS FLUENT. Usage of this product
+     license is limited to the terms and conditions specified in your ANSYS
+     license form, additional terms section.
+     --------------------------------------------------------------
+Host spawning Node 0 on machine "localhost.localdomain" (unix).
+
+999999: mpt_get_dot_address: warning: localhost.localdomain -> 127.0.0.1. Check your system network configuration!
+999999: mpt_get_dot_address: warning: localhost.localdomain -> 127.0.0.1. Check your system network configuration!/home/opt/ansys/v252/fluent/fluent25.2.0/bin/fluent -r25.2.0 2ddp -flux -node -t1 -pdefault -mpi=intel -ssh -mport 127.0.0.1:127.0.0.1:40159:0
+Starting /home/opt/ansys/v252/fluent/fluent25.2.0/multiport/mpi/lnamd64/intel/bin/mpirun -f /tmp/fluent-appfile.aoki.281367 -genv I_MPI_FABRICS shm -genv FLUENT_ARCH lnamd64 -genv I_MPI_DEBUG 0 -genv I_MPI_ADJUST_GATHERV 3 -genv I_MPI_ADJUST_ALLREDUCE 2 -genv I_MPI_PLATFORM auto -genv PYTHONHOME /home/opt/ansys/v252/fluent/fluent25.2.0/../../commonfiles/CPython/3_10/linx64/Release/python -genv FLUENT_PROD_DIR /home/opt/ansys/v252/fluent/fluent25.2.0 -genv FLUENT_AFFINITY 0 -genv I_MPI_PIN enable -genv KMP_AFFINITY disabled -n 1 /home/opt/ansys/v252/fluent/fluent25.2.0/lnamd64/2ddp_node/fluent_mpi.25.2.0 node -mpiw intel -pic shmem -mport 127.0.0.1:127.0.0.1:40159:0
+
+-------------------------------------------------------------------------------
+ID    Hostname              Core   O.S.      PID     Vendor                
+-------------------------------------------------------------------------------
+n0    localhost.localdomai  1/128  Linux-64  281437  AMD EPYC 9354 32-Core 
+host  localhost.localdomai         Linux-64  281011  AMD EPYC 9354 32-Core 
+
+MPI Option Selected: intel
+-------------------------------------------------------------------------------
+
+
+0: mpt_get_dot_address: warning: localhost.localdomain -> 127.0.0.1. Check your system network configuration!
+999999: mpt_get_dot_address: warning: localhost.localdomain -> 127.0.0.1. Check your system network configuration!
+0: mpt_get_dot_address: warning: localhost.localdomain -> 127.0.0.1. Check your system network configuration!Cleanup script file is /home/aoki/Downloads/cfd_wall_function_tst/cleanup-fluent-localhost.localdomain-281011.sh
+
+Graphics driver currently in use: null
+
+
+Posting ANSYS Product Improvement Program startup data
+Done.
+
+Reading journal file /tmp/test_kwsst.jou...
+
+> 
+/file/read-case "/home/aoki/Downloads/cfd_wall_function_tst/channel.msh"WARNING: Rank:0 Machine localhost.localdomain has 19 % of RAM filled with file buffer caches.
+This can cause potential performance issues. Please use -cflush flag to flush the cache. 
+
+
+Reading "/home/aoki/Downloads/cfd_wall_function_tst/channel.msh"...
+
+Buffering for file scan...
+
+    5151 nodes.
+    5000 quadrilateral cells, zone  1.
+      50 2D velocity-inlet faces, zone  2.
+      50 2D pressure-outlet faces, zone  3.
+     100 2D wall faces, zone  4.
+     100 2D wall faces, zone  5.
+    9850 2D interior faces, zone  6.
+
+Building...
+     mesh
+     materials,
+     interface,
+     domains,
+     zones,
+	interior-6
+	top-wall
+	bottom-wall
+	outlet
+	inlet
+	fluid
+     parallel,
+Done.
+
+
+> /define/models/viscous/kw-sst yes
+
+> /define/boundary-conditions/velocity-inlet
+(inlet)
+zone id/name [inlet] inlet
+Velocity Specification Method: Magnitude and Direction [no] no
+Velocity Specification Method: Components [no] no
+Velocity Specification Method: Magnitude, Normal to Boundary [yes] yes
+Reference Frame: Absolute [yes] yes
+Use Profile for Velocity Magnitude? [no] no
+Velocity Magnitude (constant or expression) (in [m/s]) [0] 5.0
+Use Profile for Supersonic/Initial Gauge Pressure? [no] no
+Supersonic/Initial Gauge Pressure (constant or expression) (in [Pa]) [0] 0
+Turbulence Specification Method: K and Omega [no] no
+Turbulence Specification Method: Intensity and Length Scale [no] no
+Turbulence Specification Method: Intensity and Viscosity Ratio [yes] no
+Turbulence Specification Method: Intensity and Hydraulic Diameter [no] yes
+Turbulent Intensity (constant or expression) (in [% for constant or fraction for expression]) [5] 5
+Hydraulic Diameter (constant or expression) (in [m]) [1] 0.2
+
+> /exit yes
+
+Posting ANSYS Product Improvement Program performance data 
+Done.
+Auto-Transcript Stop Time:  10:51:31, 23 Mar 2026 
+Total Transcript Time: 0 Minute 13 Second.

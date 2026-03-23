@@ -1,13 +1,13 @@
 ; ================================================================
 ; Fluent Journal: 2D Channel Flow - Wall Function Comparison
-; Fluent 25.2  /  k-epsilon Standard + Standard Wall Functions
+; Fluent 25.2  /  k-omega SST (wall-resolved, y+~1)
 ; ================================================================
 
 ; メッシュ読み込み
 /file/read-case "/home/aoki/Downloads/cfd_wall_function_tst/channel.msh"
 
-; ── 乱流モデル: k-ε 標準 ─────────────────────────────────────
-/define/models/viscous/ke-standard yes
+; ── 乱流モデル: k-ω SST (壁面解像) ───────────────────────────
+/define/models/viscous/kw-sst yes
 
 ; ── 境界条件: 速度入口 ────────────────────────────────────────
 ; Velocity Specification Method: Magnitude and Direction [no] -> no
@@ -18,7 +18,7 @@
 ; Velocity Magnitude [m/s] [0]                                -> 5.0
 ; Use Profile for Supersonic/Initial Gauge Pressure? [no]     -> no
 ; Supersonic/Initial Gauge Pressure [Pa] [0]                  -> 0
-; Turbulence: K and Epsilon [no]                              -> no
+; Turbulence: K and Omega [no]                                -> no
 ; Turbulence: Intensity and Length Scale [no]                 -> no
 ; Turbulence: Intensity and Viscosity Ratio [yes]             -> no
 ; Turbulence: Intensity and Hydraulic Diameter [no]           -> yes
@@ -47,7 +47,7 @@ yes
 ; Gauge Pressure [Pa] [0]                                     -> 0
 ; Backflow Direction: Direction Vector [no]                   -> no
 ; Backflow Direction: Normal to Boundary [yes]                -> yes
-; Turbulence: K and Epsilon [no]                              -> no
+; Turbulence: K and Omega [no]                                -> no
 ; Turbulence: Intensity and Length Scale [no]                 -> no
 ; Turbulence: Intensity and Viscosity Ratio [yes]             -> no
 ; Turbulence: Intensity and Hydraulic Diameter [no]           -> yes

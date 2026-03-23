@@ -2,7 +2,7 @@
 """
 乱流壁法則 理論解 vs Ansys Fluent CFD 比較
 ============================================
-2次元チャネル乱流の壁法則を k-ε 標準モデル (標準壁関数) でシミュレーションし、
+2次元チャネル乱流の壁法則を k-ω SST モデル (壁面解像メッシュ) でシミュレーションし、
 理論解 (粘性底層・対数則) と比較する。
 
 理論:
@@ -59,10 +59,13 @@ _TAU_W = (_f_est / 8.0) * RHO * U_BULK**2
 U_TAU_EST = (_TAU_W / RHO)**0.5           # ≈ 0.27 m/s
 
 # ─── メッシュパラメータ ────────────────────────────────────────────────────────
-# 第 1 セル高さ: y⁺ ≈ 40 (標準壁関数 30–300 の範囲内)
+# 第 1 セル中心 y⁺ ≈ 1 (k-ω SST 壁面解像): 幾何級数 y 間隔
 NX      = 100    # x 方向 (一様)
-NY      = 50     # y 方向 (一様)
-DY_WALL = NY     # 一様: dy = H/NY ≈ 0.002 m → y⁺ ≈ 37
+NY_HALF = 25     # y 方向 半チャネル分のセル数 (幾何級数, 壁から離れるにつれ拡大)
+NY      = NY_HALF * 2   # y 方向合計セル数 (上下対称)
+R_EXP   = 1.2    # y 方向幾何拡大率
+# dy1 = (H/2)*(r-1)/(r^N-1) → 第1セル中心 y⁺ ≈ 1 になるよう設計
+_DY1    = (CHANNEL_HEIGHT / 2.0) * (R_EXP - 1.0) / (R_EXP**NY_HALF - 1.0)
 
 # ─── 壁法則定数 ───────────────────────────────────────────────────────────────
 KAPPA = 0.41
@@ -125,7 +128,16 @@ def generate_channel_mesh(filename: str, Nx: int, Ny: int,
       zone 6: interior    (内部面)
     """
     x_nodes = np.linspace(0.0, L, Nx + 1)
-    y_nodes = np.linspace(0.0, H, Ny + 1)
+
+    # ── 幾何級数 y 節点 (両壁面で細かく、チャネル中央で粗い対称メッシュ) ──
+    half_H = H / 2.0
+    dy1 = half_H * (R_EXP - 1.0) / (R_EXP**NY_HALF - 1.0)
+    y_half = np.zeros(NY_HALF + 1)
+    dy = dy1
+    for k in range(NY_HALF):
+        y_half[k + 1] = y_half[k] + dy
+        dy *= R_EXP
+    y_nodes = np.concatenate([y_half, H - y_half[-2::-1]])
 
     n_nodes   = (Nx + 1) * (Ny + 1)
     n_cells   = Nx * Ny
@@ -231,9 +243,10 @@ def generate_channel_mesh(filename: str, Nx: int, Ny: int,
 
     print(f"[mesh] 生成完了: {filename}")
     print(f"       ノード {n_nodes:,}, セル {n_cells:,}, 面 {n_faces:,}")
-    dy = H / Ny
-    yp_est = dy * U_TAU_EST / NU
-    print(f"       dy = {dy*1000:.2f} mm, 推定 y⁺ ≈ {yp_est:.1f}")
+    dy1_mm = dy1 * 1e3
+    yp1_est = (dy1 / 2.0) * U_TAU_EST / NU   # 第1セル中心の推定 y⁺
+    print(f"       第1セル高さ dy1 = {dy1_mm:.4f} mm, 推定 y⁺(第1セル中心) ≈ {yp1_est:.2f}")
+    print(f"       拡大率 R = {R_EXP}, 半チャネル分 NY_HALF = {NY_HALF}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -244,7 +257,7 @@ def write_fluent_journal(journal_file: str, mesh_file: str,
                          vel_out: str, shear_out: str) -> None:
     """
     Fluent 25.2 TUI ジャーナルを生成する。
-    k-ε 標準モデル + 標準壁関数, SIMPLE 法。
+    k-ω SST モデル (壁面解像, y⁺≈1), SIMPLE 法。
     各プロンプトへの応答は Fluent 25.2 で実際に確認済み。
     """
     x_mid = CHANNEL_LENGTH / 2.0
@@ -252,14 +265,14 @@ def write_fluent_journal(journal_file: str, mesh_file: str,
 
     jou = f"""; ================================================================
 ; Fluent Journal: 2D Channel Flow - Wall Function Comparison
-; Fluent 25.2  /  k-epsilon Standard + Standard Wall Functions
+; Fluent 25.2  /  k-omega SST (wall-resolved, y+~1)
 ; ================================================================
 
 ; メッシュ読み込み
 /file/read-case "{mesh_file}"
 
-; ── 乱流モデル: k-ε 標準 ─────────────────────────────────────
-/define/models/viscous/ke-standard yes
+; ── 乱流モデル: k-ω SST (壁面解像) ───────────────────────────
+/define/models/viscous/kw-sst yes
 
 ; ── 境界条件: 速度入口 ────────────────────────────────────────
 ; Velocity Specification Method: Magnitude and Direction [no] -> no
@@ -270,7 +283,7 @@ def write_fluent_journal(journal_file: str, mesh_file: str,
 ; Velocity Magnitude [m/s] [0]                                -> {U_BULK}
 ; Use Profile for Supersonic/Initial Gauge Pressure? [no]     -> no
 ; Supersonic/Initial Gauge Pressure [Pa] [0]                  -> 0
-; Turbulence: K and Epsilon [no]                              -> no
+; Turbulence: K and Omega [no]                                -> no
 ; Turbulence: Intensity and Length Scale [no]                 -> no
 ; Turbulence: Intensity and Viscosity Ratio [yes]             -> no
 ; Turbulence: Intensity and Hydraulic Diameter [no]           -> yes
@@ -299,7 +312,7 @@ yes
 ; Gauge Pressure [Pa] [0]                                     -> 0
 ; Backflow Direction: Direction Vector [no]                   -> no
 ; Backflow Direction: Normal to Boundary [yes]                -> yes
-; Turbulence: K and Epsilon [no]                              -> no
+; Turbulence: K and Omega [no]                                -> no
 ; Turbulence: Intensity and Length Scale [no]                 -> no
 ; Turbulence: Intensity and Viscosity Ratio [yes]             -> no
 ; Turbulence: Intensity and Hydraulic Diameter [no]           -> yes
@@ -366,7 +379,7 @@ def run_fluent_simulation() -> None:
             os.remove(fpath)
 
     print("\n[fluent] Fluent 25.2 を起動中...")
-    cmd = [FLUENT_BIN, "2ddp", "-t1", "-gu", "-i", JOURNAL_FILE]
+    cmd = [FLUENT_BIN, "2ddp", "-t64", "-gu", "-i", JOURNAL_FILE]
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
 
     if result.returncode != 0:
@@ -502,8 +515,8 @@ def plot_comparison() -> str:
     lbl_log  = (r"対数則: $u^+=\frac{1}{\kappa}\ln y^++B$"
                 r"  $(\kappa=0.41,\ B=5.0)$" if use_jp else
                 r"Log-law: $u^+=\frac{1}{\kappa}\ln y^++B$  $(\kappa=0.41,\ B=5.0)$")
-    lbl_cfd  = ("Fluent CFD (k-ε 標準壁関数)" if use_jp else
-                "Fluent CFD (k-ε Std. Wall Func.)")
+    lbl_cfd  = ("Fluent CFD (k-ω SST, 壁面解像)" if use_jp else
+                "Fluent CFD (k-ω SST, wall-resolved)")
 
     ax.semilogx(yp_visc, yp_visc, "b-",  lw=2.5, label=lbl_visc)
     ax.semilogx(yp_log,  (1.0/KAPPA)*np.log(yp_log)+B_LOG,
@@ -519,14 +532,14 @@ def plot_comparison() -> str:
 
     # 軸設定
     ax.set_xlim(0.5, 2000)
-    ax.set_ylim(0, 30)
+    ax.set_ylim(0, 32)
     ax.set_xlabel("$y^+$ (無次元壁面距離)" if use_jp else "$y^+$ (dimensionless wall distance)",
                   fontsize=13)
     ax.set_ylabel("$u^+$ (無次元流速)" if use_jp else "$u^+$ (dimensionless velocity)",
                   fontsize=13)
 
-    title_main = ("乱流壁法則: 理論解 vs Ansys Fluent CFD"
-                  if use_jp else "Turbulent Wall Function: Theory vs Ansys Fluent CFD")
+    title_main = ("乱流壁法則: 理論解 vs Ansys Fluent CFD  [k-ω SST, 壁面解像]"
+                  if use_jp else "Turbulent Wall Function: Theory vs Ansys Fluent CFD  [k-ω SST, wall-resolved]")
     title_sub  = (f"2D チャネル流れ  $Re_D = {Re_D:,}$,  $Re_\\tau = {Re_tau}$"
                   if use_jp else
                   f"2D Channel Flow  $Re_D = {Re_D:,}$,  $Re_\\tau = {Re_tau}$")
