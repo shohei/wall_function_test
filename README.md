@@ -1,5 +1,18 @@
 # Wall function test
 
+壁法則 理論解 vs Fluent CFD 比較
+
+```
+# CFDを実行してプロット
+$ python wall_function_comparison.py
+# メッシュ生成のみ実行
+$ python wall_function_comparison.py  --mesh-only  
+# 既存データからプロットのみ作成
+$ python wall_function_comparison.py  --plot-only  
+# Fluent を実行せず理論解のみプロット
+$ python wall_function_comparison.py  --no-fluent  
+```  
+  
 ![](wall_function_theory.png)
 
 ## k-ε model
