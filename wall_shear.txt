@@ -1,0 +1,6 @@
+                         "Surface Integral Report"
+
+           Area-Weighted Average
+               Wall Shear Stress                 [Pa]
+-------------------------------- --------------------
+                     bottom-wall          0.093272547

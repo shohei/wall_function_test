@@ -1,0 +1,98 @@
+; ================================================================
+; Fluent Journal: 2D Channel Flow - Wall Function Comparison
+; Fluent 25.2  /  k-epsilon Standard + Standard Wall Functions
+; ================================================================
+
+; メッシュ読み込み
+/file/read-case "/home/aoki/Downloads/cfd_wall_function_tst/channel.msh"
+
+; ── 乱流モデル: k-ε 標準 ─────────────────────────────────────
+/define/models/viscous/ke-standard yes
+
+; ── 境界条件: 速度入口 ────────────────────────────────────────
+; Velocity Specification Method: Magnitude and Direction [no] -> no
+; Velocity Specification Method: Components [no]              -> no
+; Velocity Specification Method: Magnitude, Normal to Boundary [yes] -> yes
+; Reference Frame: Absolute [yes]                             -> yes
+; Use Profile for Velocity Magnitude? [no]                    -> no
+; Velocity Magnitude [m/s] [0]                                -> 5.0
+; Use Profile for Supersonic/Initial Gauge Pressure? [no]     -> no
+; Supersonic/Initial Gauge Pressure [Pa] [0]                  -> 0
+; Turbulence: K and Epsilon [no]                              -> no
+; Turbulence: Intensity and Length Scale [no]                 -> no
+; Turbulence: Intensity and Viscosity Ratio [yes]             -> no
+; Turbulence: Intensity and Hydraulic Diameter [no]           -> yes
+; Turbulent Intensity [%] [5]                                 -> 5
+; Hydraulic Diameter [m] [1]                                  -> 0.2
+/define/boundary-conditions/velocity-inlet
+inlet
+no
+no
+yes
+yes
+no
+5.0
+no
+0
+no
+no
+no
+yes
+5
+0.2
+
+; ── 境界条件: 圧力出口 ───────────────────────────────────────
+; Backflow Reference Frame: Absolute [yes]                    -> yes
+; Use Profile for Gauge Pressure? [no]                        -> no
+; Gauge Pressure [Pa] [0]                                     -> 0
+; Backflow Direction: Direction Vector [no]                   -> no
+; Backflow Direction: Normal to Boundary [yes]                -> yes
+; Turbulence: K and Epsilon [no]                              -> no
+; Turbulence: Intensity and Length Scale [no]                 -> no
+; Turbulence: Intensity and Viscosity Ratio [yes]             -> no
+; Turbulence: Intensity and Hydraulic Diameter [no]           -> yes
+; Backflow Turbulent Intensity [%] [5]                        -> 5
+; Backflow Hydraulic Diameter [m] [1]                         -> 0.2
+; Backflow Pressure Specification: Total Pressure [yes]       -> yes
+; Average Pressure Specification? [no]                        -> no
+; Specify targeted mass flow rate [no]                        -> no
+/define/boundary-conditions/pressure-outlet
+outlet
+yes
+no
+0
+no
+yes
+no
+no
+no
+yes
+5
+0.2
+yes
+no
+no
+
+; ── 初期化 & 計算 ─────────────────────────────────────────────
+/solve/initialize/initialize-flow
+/solve/iterate 500
+
+; ── ポスト処理 ───────────────────────────────────────────────
+; x = L/2 の縦断面ライン
+/surface/line-surface
+centerline
+0.5 0
+0.5 0.05
+
+; 速度プロファイル出力 (nodenumber x y x-velocity の順)
+/file/export/ascii "/home/aoki/Downloads/cfd_wall_function_tst/velocity_profile.dat" centerline () no x-velocity () no
+
+; 壁面せん断応力 (面積加重平均) 出力
+/report/surface-integrals/area-weighted-avg
+bottom-wall
+()
+wall-shear
+yes
+"/home/aoki/Downloads/cfd_wall_function_tst/wall_shear.dat"
+
+/exit yes
